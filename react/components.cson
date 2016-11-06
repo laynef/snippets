@@ -5,6 +5,8 @@
 # @Last modified time: 11-05-2016
 
 '.source.js':
+
+####### React Menu ########
   'React Menu Snippet':
     'prefix': '_rmenu'
     'body': """
@@ -38,4 +40,115 @@
     });
 
     module.exports = Menu;
+    
+    """
+##### React Comment Box #####
+  'React Comment Box Snippet':
+    'prefix': '_rcomments'
+    'body': """
+    import React from 'react';
+
+    var Comment = React.createClass({
+      render: function() {
+        return (
+          <div className="comment">
+            <h2 className="commentAuthor">
+              {this.props.author}
+            </h2>
+            <span />
+          </div>
+        );
+      }
+    });
+
+    var CommentList = React.createClass({
+      render: function() {
+        var commentNodes = this.props.data.map((comment, index) => (
+          <Comment author={comment.author} key={index}>
+            {comment.text}
+          </Comment>
+        ));
+        return (
+          <div className="commentList">
+            {commentNodes}
+          </div>
+        );
+      }
+    });
+
+    var CommentTextField = React.createClass({
+      handleSubmit: function(e) {
+        e.preventDefault();
+        var author = this.refs.author.getDOMNode().value.trim();
+        if (!text || !author) { return; }
+        this.props.onCommentSubmit({author: author, text: text});
+        this.refs.author.getDOMNode().value = '';
+        this.refs.text.getDOMNode().value = '';
+        return;
+      },
+      render: function() {
+        return (
+          <form className="commentForm" onSubmit={this.handleSubmit}>
+            <input type="text" placeholder="Your name" ref="author" />
+            <input type="text" placeholder="Enter a message..." ref="text" />
+            <input type="submit" value="Post" />
+          </form>
+        );
+      }
+    });
+
+    var CommentBox = React.createClass({
+      loadCommentsFromServer: function() {
+        $.ajax({
+          url: this.props.url,
+          dataType: 'json',
+          type: 'GET',
+          success: function(data) {
+            this.setState({ data: data });
+          }.bind(this),
+          error: function(xhr, status, err) {
+            console.error(this.props.url, status, err.toString());
+          }.bind(this)
+        });
+      },
+      handleCommentSubmit: function(comment) {
+        var comments = this.state.data;
+        comments.push(comment);
+        this.setState({data: comments}, function() {
+          $.ajax({
+            url: this.props.url,
+            dataType: 'json',
+            type: 'POST',
+            data: comment,
+            success: function(data) {
+              this.setState({data: data});
+            }.bind(this),
+            error: function(xhr, status, err) {
+              console.error(this.props.url, status, err.toString());
+            }.bind(this)
+          });
+        });
+      },
+      getInitialState: function() {
+        return {
+          data: []
+        };
+      },
+      componentDidMount: function() {
+        this.loadCommentsFromServer();
+        setInterval(this.loadCommentsFromServer, 2000);
+      },
+      render: function() {
+        return (
+          <div className="commentBox">
+            <h1>Comments</h1>
+            <CommentList data={this.state.data} />
+            <CommentForm onCommentSubmit={this.handleCommentSubmit} />
+          </div>
+        );
+      }
+    });
+
+    module.exports = CommentBox;
+
     """
